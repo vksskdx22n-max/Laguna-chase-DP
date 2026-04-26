@@ -61,7 +61,7 @@ canvas {
   text-shadow: 0 0 5px #00e5ff;
 }
 
-#top-ui span { color: #f4d03f; text-shadow: 0 0 5px #f4d03f; }
+#top-ui span { color: #f4d03f; }
 #top-ui .label { font-size: 7px; color: rgba(0,229,255,0.6); margin-right: 5px; }
 
 #fear-container {
@@ -576,7 +576,7 @@ canvas {
         if(zoneIdx < 3) {
           gameRunning = false;
           document.getElementById('zoneTitle').innerHTML = `🌊 ${ZONES_DATA[zoneIdx+1].name} 🌊`;
-          document.getElementById('zoneDesc').innerHTML = `${ZONES_DATA[zoneIdx+1].desc}<br><br>Bonus +300 punti!<br>Meduse: ${ZONES_DATA[zoneIdx+1].meduse}`;
+          document.getElementById('zoneDesc').innerHTML = `${ZONES_DATA[zoneIdx+1].desc || 'Nuova zona!'}<br><br>Bonus +300 punti!<br>Meduse: ${ZONES_DATA[zoneIdx+1].meduse}`;
           document.getElementById('zoneOverlay').classList.remove('hidden');
           playSound(440, 0.15);
         } else {
@@ -752,12 +752,14 @@ canvas {
     tileH = (canvasH - 40) / ROWS;
     yOffset = 25;
     
-    if(player && tileW > 0) {
+    if(tileW > 0 && player && player.r) {
       player.x = getCX(player.c);
       player.y = getCY(player.r);
       for(let m of medusas) {
-        m.x = getCX(m.c);
-        m.y = getCY(m.r);
+        if(m) {
+          m.x = getCX(m.c);
+          m.y = getCY(m.r);
+        }
       }
       if(fish.active) {
         fish.x = getCX(fishSpots[0]?.c || 10);
@@ -769,6 +771,7 @@ canvas {
   
   // ======================== GAME FLOW ========================
   function startGame() {
+    console.log("START GAME chiamato!");
     gameRunning = true;
     score = 0;
     lives = 3;
@@ -790,6 +793,10 @@ canvas {
     document.getElementById('zoneOverlay').classList.add('hidden');
   }
   
+  function restartGame() {
+    startGame();
+  }
+  
   function nextZone() {
     zoneIdx++;
     score += 300;
@@ -807,10 +814,15 @@ canvas {
   
   // ======================== TOUCH ========================
   function setupControls() {
-    document.getElementById('touchUp').addEventListener('touchstart', (e) => { e.preventDefault(); wantedDir = 3; });
-    document.getElementById('touchDown').addEventListener('touchstart', (e) => { e.preventDefault(); wantedDir = 1; });
-    document.getElementById('touchLeft').addEventListener('touchstart', (e) => { e.preventDefault(); wantedDir = 2; });
-    document.getElementById('touchRight').addEventListener('touchstart', (e) => { e.preventDefault(); wantedDir = 0; });
+    const upBtn = document.getElementById('touchUp');
+    const downBtn = document.getElementById('touchDown');
+    const leftBtn = document.getElementById('touchLeft');
+    const rightBtn = document.getElementById('touchRight');
+    
+    if(upBtn) upBtn.addEventListener('touchstart', (e) => { e.preventDefault(); wantedDir = 3; });
+    if(downBtn) downBtn.addEventListener('touchstart', (e) => { e.preventDefault(); wantedDir = 1; });
+    if(leftBtn) leftBtn.addEventListener('touchstart', (e) => { e.preventDefault(); wantedDir = 2; });
+    if(rightBtn) rightBtn.addEventListener('touchstart', (e) => { e.preventDefault(); wantedDir = 0; });
     
     let touchStart = null;
     canvas.addEventListener('touchstart', (e) => {
@@ -843,18 +855,47 @@ canvas {
       if(e.key === 'ArrowDown' || e.key === 's') wantedDir = 1;
       if(e.key === 'ArrowLeft' || e.key === 'a') wantedDir = 2;
       if(e.key === 'ArrowUp' || e.key === 'w') wantedDir = 3;
-      e.preventDefault();
     });
   }
   
   // ======================== INIT ========================
   function init() {
+    console.log("INIT avviato");
     setupControls();
     resizeAndUpdate();
     window.addEventListener('resize', () => { resizeAndUpdate(); draw(); });
-    document.getElementById('startBtn').onclick = startGame;
-    document.getElementById('restartBtn').onclick = startGame;
-    document.getElementById('zoneOverlay').onclick = () => { if(!gameRunning && zoneIdx < 3) nextZone(); };
+    
+    const startBtn = document.getElementById('startBtn');
+    const restartBtn = document.getElementById('restartBtn');
+    const zoneOverlay = document.getElementById('zoneOverlay');
+    
+    if(startBtn) {
+      startBtn.onclick = function(e) {
+        e.preventDefault();
+        startGame();
+      };
+      startBtn.addEventListener('touchstart', function(e) {
+        e.preventDefault();
+        startGame();
+      });
+    }
+    
+    if(restartBtn) {
+      restartBtn.onclick = function(e) {
+        e.preventDefault();
+        startGame();
+      };
+      restartBtn.addEventListener('touchstart', function(e) {
+        e.preventDefault();
+        startGame();
+      });
+    }
+    
+    if(zoneOverlay) {
+      zoneOverlay.onclick = function() {
+        if(!gameRunning && zoneIdx < 3) nextZone();
+      };
+    }
     
     function loop() {
       updateGame();
