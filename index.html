@@ -12,26 +12,26 @@
   padding: 0;
   box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;
+  user-select: none;
 }
 
 body {
   background: #000c1a;
-  font-family: 'Press Start 2P', monospace;
   overflow: hidden;
-  touch-action: none;
   position: fixed;
   width: 100%;
   height: 100%;
+  font-family: 'Press Start 2P', monospace;
 }
 
 #game-container {
   position: relative;
-  width: 100vw;
-  height: 100vh;
+  width: 100%;
+  height: 100%;
+  background: #000c1a;
   display: flex;
   justify-content: center;
   align-items: center;
-  background: #000;
 }
 
 canvas {
@@ -41,105 +41,160 @@ canvas {
   left: 0;
   width: 100%;
   height: 100%;
-  object-fit: contain;
   cursor: crosshair;
-  touch-action: none;
 }
 
-/* Overlay informazioni - minimali e trasparenti */
-#top-info {
+/* UI Overlay - Stile retro arcade */
+#top-ui {
   position: absolute;
-  top: 10px;
-  left: 10px;
-  right: 10px;
+  top: 12px;
+  left: 12px;
+  right: 12px;
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.7);
   backdrop-filter: blur(8px);
-  padding: 6px 12px;
-  border-radius: 20px;
-  border: 1px solid rgba(0, 229, 255, 0.3);
+  padding: 10px 16px;
+  border-radius: 40px;
+  border: 1px solid rgba(0, 229, 255, 0.4);
   z-index: 20;
-  font-size: 8px;
-  pointer-events: none;
+  font-size: 10px;
   font-family: 'Press Start 2P', monospace;
+  color: #00e5ff;
+  text-shadow: 0 0 5px #00e5ff;
+  letter-spacing: 1px;
 }
 
-#top-info span { color: #f4d03f; }
-#top-info .label { color: #00e5ff; font-size: 7px; margin-right: 4px; }
+#top-ui span { color: #f4d03f; text-shadow: 0 0 5px #f4d03f; }
+#top-ui .label { font-size: 7px; color: rgba(0,229,255,0.6); margin-right: 5px; }
 
-#bottom-info {
+#fear-container {
   position: absolute;
-  bottom: 12px;
+  top: 70px;
+  left: 12px;
+  right: 12px;
+  height: 6px;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 3px;
+  border: 1px solid rgba(0, 229, 255, 0.3);
+  z-index: 20;
+  overflow: hidden;
+}
+
+#fear-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #00ccff, #00ff88);
+  border-radius: 3px;
+  transition: width 0.05s linear;
+  box-shadow: 0 0 8px #00ccff;
+}
+
+#bottom-ui {
+  position: absolute;
+  bottom: 80px;
   left: 12px;
   right: 12px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: rgba(0, 0, 0, 0.55);
+  background: rgba(0, 0, 0, 0.65);
   backdrop-filter: blur(8px);
-  padding: 6px 14px;
-  border-radius: 25px;
-  border: 1px solid rgba(0, 229, 255, 0.25);
+  padding: 8px 16px;
+  border-radius: 30px;
+  border: 1px solid rgba(0, 229, 255, 0.3);
   z-index: 20;
-  font-size: 7px;
-  pointer-events: none;
+  font-size: 8px;
+  font-family: 'Press Start 2P', monospace;
 }
 
 .zone-badge {
   display: flex;
-  gap: 6px;
+  gap: 8px;
 }
 
 .zs {
-  padding: 3px 6px;
-  border-radius: 12px;
-  background: rgba(0, 0, 0, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  font-size: 6px;
+  padding: 4px 8px;
+  border-radius: 20px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  font-size: 7px;
   color: rgba(255, 255, 255, 0.4);
+  transition: all 0.2s;
 }
 
-.zs.on { color: #00e5ff; border-color: #00e5ff; background: rgba(0, 229, 255, 0.15); }
-.zs.ok { color: #00ff88; border-color: #00ff88; }
+.zs.on {
+  color: #00e5ff;
+  border-color: #00e5ff;
+  background: rgba(0, 229, 255, 0.15);
+  box-shadow: 0 0 8px rgba(0, 229, 255, 0.3);
+  animation: pulse 0.8s alternate infinite;
+}
 
-#zone-name { color: #00e5ff; font-size: 7px; }
-#fish-alert { color: #f4d03f; font-size: 6px; }
+.zs.ok {
+  color: #00ff88;
+  border-color: #00ff88;
+  background: rgba(0, 255, 136, 0.1);
+}
 
-/* Bottoni touch flottanti */
-.touch-buttons {
+@keyframes pulse {
+  from { box-shadow: 0 0 4px rgba(0, 229, 255, 0.3); }
+  to { box-shadow: 0 0 12px rgba(0, 229, 255, 0.6); }
+}
+
+#fish-message {
+  color: #f4d03f;
+  font-size: 7px;
+  text-shadow: 0 0 5px #f4d03f;
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Bottoni touch - stile arcade */
+#touch-panel {
   position: absolute;
-  bottom: 20px;
-  right: 20px;
+  bottom: 12px;
+  right: 12px;
   display: flex;
   gap: 10px;
   z-index: 30;
-  pointer-events: none;
 }
 
-.tb {
-  width: 65px;
-  height: 65px;
-  border-radius: 50%;
-  background: rgba(0, 229, 255, 0.12);
-  backdrop-filter: blur(10px);
-  border: 2px solid rgba(0, 229, 255, 0.5);
+.touch-btn {
+  width: 70px;
+  height: 70px;
+  border-radius: 35px;
+  background: rgba(0, 229, 255, 0.15);
+  backdrop-filter: blur(12px);
+  border: 2px solid rgba(0, 229, 255, 0.7);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: 26px;
+  font-size: 28px;
   color: #00e5ff;
-  pointer-events: auto;
   cursor: pointer;
-  touch-action: manipulation;
-  transition: 0.02s linear;
   font-family: monospace;
+  transition: 0.02s linear;
+  box-shadow: 0 0 10px rgba(0, 229, 255, 0.3);
 }
 
-.tb span { font-size: 7px; margin-top: 2px; opacity: 0.8; }
-.tb:active { background: rgba(0, 229, 255, 0.35); transform: scale(0.94); }
+.touch-btn:active {
+  background: rgba(0, 229, 255, 0.4);
+  transform: scale(0.92);
+  box-shadow: 0 0 20px rgba(0, 229, 255, 0.6);
+}
+
+.touch-btn span {
+  font-size: 8px;
+  margin-top: 2px;
+  font-family: 'Press Start 2P', monospace;
+  letter-spacing: 0;
+}
 
 /* Overlay modali */
 .overlay {
@@ -148,75 +203,63 @@ canvas {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 6, 20, 0.96);
-  backdrop-filter: blur(12px);
+  background: rgba(0, 6, 20, 0.98);
+  backdrop-filter: blur(16px);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 16px;
+  gap: 20px;
   z-index: 100;
   text-align: center;
-  padding: 20px;
-}
-
-.overlay-title {
-  font-size: 14px;
-  color: #f4d03f;
-  text-shadow: 0 0 12px currentColor;
-  line-height: 1.6;
-}
-
-.overlay-desc {
-  font-size: 8px;
-  color: rgba(255, 255, 255, 0.85);
-  max-width: 85%;
-  line-height: 1.8;
-}
-
-.overlay-btn {
+  padding: 30px;
   font-family: 'Press Start 2P', monospace;
+}
+
+.overlay h2 {
+  color: #f4d03f;
+  font-size: 16px;
+  text-shadow: 0 0 15px #f4d03f, 0 0 30px #ff8c00;
+  line-height: 1.5;
+}
+
+.overlay p {
+  color: #00e5ff;
   font-size: 9px;
-  padding: 12px 24px;
+  line-height: 1.8;
+  max-width: 280px;
+}
+
+.overlay button {
   background: transparent;
   border: 2px solid #00e5ff;
   color: #00e5ff;
+  padding: 14px 28px;
+  font-size: 10px;
+  font-family: 'Press Start 2P', monospace;
   cursor: pointer;
-  margin-top: 8px;
+  margin-top: 10px;
   transition: 0.1s;
+  text-shadow: 0 0 5px #00e5ff;
+  animation: btnPulse 1s step-end infinite;
 }
 
-.overlay-btn:active { background: rgba(0, 229, 255, 0.2); }
-
-.hidden { display: none; }
-
-.blink {
-  animation: blinkAnim 1s infinite;
-}
-
-@keyframes blinkAnim {
+@keyframes btnPulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.6; }
 }
 
-.fear-bar {
-  position: absolute;
-  top: 55px;
-  left: 10px;
-  width: 100px;
-  height: 4px;
-  background: rgba(0, 0, 0, 0.5);
-  border-radius: 2px;
-  overflow: hidden;
-  z-index: 20;
-  pointer-events: none;
+.overlay button:active {
+  background: rgba(0, 229, 255, 0.2);
+  transform: scale(0.96);
 }
 
-.fear-fill {
-  height: 100%;
-  width: 0%;
-  background: #00ccff;
-  transition: width 0.05s linear;
+.hidden { display: none; }
+
+.small-text {
+  font-size: 6px;
+  color: rgba(0, 229, 255, 0.5);
+  margin-top: 10px;
 }
 </style>
 </head>
@@ -224,223 +267,283 @@ canvas {
 <div id="game-container">
   <canvas id="gameCanvas"></canvas>
   
-  <div id="top-info">
-    <div>🏆 <span id="scoreDisplay">0</span></div>
-    <div>❤️ <span id="livesDisplay">3</span></div>
-    <div>🦀 <span id="crabsDisplay">0/0</span></div>
-    <div>🏅 <span id="recordDisplay">0</span></div>
+  <!-- UI Arcade -->
+  <div id="top-ui">
+    <div><span class="label">🏆</span> <span id="scoreValue">0</span></div>
+    <div><span class="label">❤️</span> <span id="livesValue">3</span></div>
+    <div><span class="label">🦀</span> <span id="crabsValue">0/0</span></div>
+    <div><span class="label">🏅</span> <span id="recordValue">0</span></div>
   </div>
   
-  <div class="fear-bar" id="fearBar">
-    <div class="fear-fill" id="fearFill"></div>
+  <div id="fear-container">
+    <div id="fear-bar"></div>
   </div>
   
-  <div id="bottom-info">
+  <div id="bottom-ui">
     <div class="zone-badge" id="zoneBadges">
-      <span class="zs on" data-z="0">⚓ M</span>
-      <span class="zs" data-z="1">🌿 SL</span>
-      <span class="zs" data-z="2">⛽ CP</span>
-      <span class="zs" data-z="3">🌊 CM</span>
+      <span class="zs on" data-z="0">⚓ MOR</span>
+      <span class="zs" data-z="1">🌿 S.L</span>
+      <span class="zs" data-z="2">⛽ PET</span>
+      <span class="zs" data-z="3">🌊 MEL</span>
     </div>
-    <div id="zone-name">MORANZANI</div>
-    <div id="fish-alert">🦀 0/0</div>
+    <div id="zoneName" style="color:#00e5ff; font-size:7px;">MORANZANI</div>
+    <div id="fish-message">🦀 0/0</div>
   </div>
   
-  <div class="touch-buttons">
-    <div class="tb" id="touchUp">▲<span>SU</span></div>
-    <div class="tb" id="touchDown">▼<span>GIU</span></div>
-    <div class="tb" id="touchLeft">◀<span>SX</span></div>
-    <div class="tb" id="touchRight">▶<span>DX</span></div>
+  <!-- Touch Controls -->
+  <div id="touch-panel">
+    <div class="touch-btn" id="touchUp">▲<span>SU</span></div>
+    <div class="touch-btn" id="touchDown">▼<span>GIU</span></div>
+    <div class="touch-btn" id="touchLeft">◀<span>SX</span></div>
+    <div class="touch-btn" id="touchRight">▶<span>DX</span></div>
   </div>
   
-  <!-- START OVERLAY -->
-  <div class="overlay" id="startOverlay">
-    <div class="overlay-title">🎣 LAGUNA CHASE 🎣</div>
-    <div class="overlay-desc">
-      ENNIO E SANDRO A CACCIA DEL BRANZINO<br><br>
-      Mangia tutti i <b style="color:#4488ff">GRANCHI BLU</b><br>
-      Poi acchiappa il <b style="color:#c8e8ff">BRANZINO</b><br><br>
-      🟡 I GRANCHI DORATI<br>spaventano le MEDUSE per 6s!
-    </div>
-    <button class="overlay-btn" id="startBtn">▶ CALA LA LENZA ◀</button>
-    <div style="font-size: 5px; color: rgba(0,229,255,0.5); margin-top: 8px;">TOUCH DRAG • BOTTONI • FRECCE</div>
+  <!-- START -->
+  <div id="startOverlay" class="overlay">
+    <h2>🎣 LAGUNA CHASE 🎣</h2>
+    <p>ENNIO E SANDRO<br>A CACCIA DEL BRANZINO PERDUTO</p>
+    <p>Mangia tutti i <span style="color:#4488ff">GRANCHI BLU</span><br>
+    Poi acchiappa il <span style="color:#c8e8ff">BRANZINO</span><br><br>
+    🟡 <span style="color:#ffcc00">GRANCHI DORATI</span><br>spaventano le MEDUSE!</p>
+    <button id="startBtn">▶ CALA LA LENZA ◀</button>
+    <div class="small-text">TOUCH DRAG • BOTTONI • FRECCE</div>
   </div>
   
   <!-- GAME OVER -->
-  <div class="overlay hidden" id="gameoverOverlay">
-    <div class="overlay-title" style="color:#ff6b35">💀 GAME OVER 💀</div>
-    <div class="overlay-desc">Il branzino è scappato!<br>Riprova!</div>
-    <div class="overlay-desc" id="finalScore"></div>
-    <button class="overlay-btn" id="restartBtn">▶ RIPROVA ◀</button>
+  <div id="gameoverOverlay" class="overlay hidden">
+    <h2 style="color:#ff6b35">💀 GAME OVER 💀</h2>
+    <p>Il branzino è scappato!<br>La spigola si pesca meglio all'alba...</p>
+    <p id="finalScoreText"></p>
+    <button id="restartBtn">▶ RIPROVA ◀</button>
   </div>
   
   <!-- ZONE TRANSITION -->
-  <div class="overlay hidden" id="zoneOverlay">
-    <div class="overlay-title" id="zoneTitle">🌊 NUOVA ZONA</div>
-    <div class="overlay-desc" id="zoneDesc"></div>
-    <div class="overlay-desc blink" style="font-size: 7px;">Tocca per continuare...</div>
+  <div id="zoneOverlay" class="overlay hidden">
+    <h2 id="zoneTitle">🌊 NUOVA ZONA</h2>
+    <p id="zoneDesc"></p>
+    <div class="small-text" style="animation: blink 1s infinite;">TOCCA PER CONTINUARE</div>
   </div>
 </div>
 
 <script>
-// ======================== AUDIO ========================
-let audioCtx = null;
-function getAudio() {
-  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  if (audioCtx.state !== 'running') audioCtx.resume();
-  return audioCtx;
-}
-function playBeep(freq, dur, vol = 0.1) {
-  try {
-    let ctx = getAudio();
-    let osc = ctx.createOscillator();
-    let gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.type = 'sine';
-    osc.frequency.value = freq;
-    gain.gain.value = vol;
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
-    osc.start();
-    osc.stop(ctx.currentTime + dur);
-  } catch(e) {}
-}
-function sfxEat() { playBeep(800, 0.06, 0.12); playBeep(600, 0.08, 0.1); }
-function sfxPower() { [300, 450, 600].forEach((f, i) => setTimeout(() => playBeep(f, 0.1, 0.12), i * 50)); }
-function sfxHit() { playBeep(200, 0.15, 0.2); playBeep(100, 0.2, 0.15); }
-function sfxWin() { [523, 659, 784].forEach((f, i) => setTimeout(() => playBeep(f, 0.12, 0.15), i * 80)); }
-function sfxZone() { [440, 554, 660].forEach((f, i) => setTimeout(() => playBeep(f, 0.1, 0.12), i * 70)); }
-
-// ======================== MAPPA E COSTANTI ========================
+// ======================== MAPPE COMPLETE ========================
 const MAPS = [
-  ['WWWWWWWWWWWWWWWWWWWW', 'Wo....W.....W....oW', 'W.WWW.W.WWW.W.WWW.W', 'W.W............W.W', 'W.W.WW...WWW.WW.W', 'W..............WW', 'W.W...W...W..W.WW', 'W..............WW', 'W.W.WW...WWW.WW.W', 'W.W............W.W', 'Wo....W.....W....oW', 'WWWWWWWWWWWWWWWWWWWW'],
-  ['WWWWWWWWWWWWWWWWWWWW', 'Wo.............oWW', 'W.WW.W.WW.WW.WW.WW', 'W...W...W....W..W', 'W.WWWW.WW.WWW.WWWW', 'W.W...........WWW', 'WW W...      ..WWW', 'W.W...........WWW', 'W.WWWW.WW.WWW.WWWW', 'W...W...W....W..W', 'Wo.............oWW', 'WWWWWWWWWWWWWWWWWWWW'],
-  ['WWWWWWWWWWWWWWWWWWWW', 'Wo...W.......W..oW', 'W.W..W.WWWWW.W.W..', 'W.W..........W.W..', 'W.WWW.W.WWWWWWW..W', 'W......W......W.W', 'WW.....      ..WWW', 'W......W......W.W', 'W.WWW.W.WWWWWWW..W', 'W.W..........W.W..', 'Wo...W.......W..oW', 'WWWWWWWWWWWWWWWWWWWW'],
-  ['WWWWWWWWWWWWWWWWWWWW', 'Wo.............oWW', 'W.WWWWWWWWWWWWWWWW', 'W..............WW', 'W.WWWWW.WW.WWWWWWW', 'W.W...........WWW', 'WW W...      ..WWW', 'W.W...........WWW', 'W.WWWWW.WW.WWWWWWW', 'W..............WW', 'Wo.............oWW', 'WWWWWWWWWWWWWWWWWWWW']
+  // MORANZANI
+  [
+    'WWWWWWWWWWWWWWWWWWWW',
+    'Wo....W.....W....oW',
+    'W.WWW.W.WWW.W.WWW.W',
+    'W.W............W.W',
+    'W.W.WW...WWW.WW.W',
+    'W..............WW',
+    'W.W...W...W..W.WW',
+    'W..............WW',
+    'W.W.WW...WWW.WW.W',
+    'W.W............W.W',
+    'Wo....W.....W....oW',
+    'WWWWWWWWWWWWWWWWWWWW'
+  ],
+  // SAN LEONARDO
+  [
+    'WWWWWWWWWWWWWWWWWWWW',
+    'Wo.............oWW',
+    'W.WW.W.WW.WW.WW.WW',
+    'W...W...W....W..W',
+    'W.WWWW.WW.WWW.WWWW',
+    'W.W...........WWW',
+    'WW W...      ..WWW',
+    'W.W...........WWW',
+    'W.WWWW.WW.WWW.WWWW',
+    'W...W...W....W..W',
+    'Wo.............oWW',
+    'WWWWWWWWWWWWWWWWWWWW'
+  ],
+  // CANALE PETROLI
+  [
+    'WWWWWWWWWWWWWWWWWWWW',
+    'Wo...W.......W..oW',
+    'W.W..W.WWWWW.W.W..',
+    'W.W..........W.W..',
+    'W.WWW.W.WWWWWWW..W',
+    'W......W......W.W',
+    'WW.....      ..WWW',
+    'W......W......W.W',
+    'W.WWW.W.WWWWWWW..W',
+    'W.W..........W.W..',
+    'Wo...W.......W..oW',
+    'WWWWWWWWWWWWWWWWWWWW'
+  ],
+  // CANALE MELISON
+  [
+    'WWWWWWWWWWWWWWWWWWWW',
+    'Wo.............oWW',
+    'W.WWWWWWWWWWWWWWWW',
+    'W..............WW',
+    'W.WWWWW.WW.WWWWWWW',
+    'W.W...........WWW',
+    'WW W...      ..WWW',
+    'W.W...........WWW',
+    'W.WWWWW.WW.WWWWWWW',
+    'W..............WW',
+    'Wo.............oWW',
+    'WWWWWWWWWWWWWWWWWWWW'
+  ]
 ];
 
-const ZONES = [
-  { name: 'MORANZANI', col: '#00e5ff', mn: 2, ps: 2.2, ms: 0.95 },
-  { name: 'SAN LEONARDO', col: '#00ff88', mn: 3, ps: 2.6, ms: 1.15 },
-  { name: 'CANALE PETROLI', col: '#ff6b35', mn: 4, ps: 2.9, ms: 1.35 },
-  { name: 'CANALE MELISON', col: '#f4d03f', mn: 4, ps: 3.2, ms: 1.55 }
+const ZONES_DATA = [
+  { name: 'MORANZANI', color: '#00e5ff', meduse: 2, pspeed: 2.2, mspeed: 0.95, desc: 'Acque calme di Moranzani!', bg: '#001c2e' },
+  { name: 'SAN LEONARDO', color: '#00ff88', meduse: 3, pspeed: 2.6, mspeed: 1.15, desc: 'Canneti di San Leonardo!', bg: '#001a10' },
+  { name: 'CANALE PETROLI', color: '#ff6b35', meduse: 4, pspeed: 2.9, mspeed: 1.35, desc: 'Canale dei Petroli!', bg: '#0a0800' },
+  { name: 'CANALE MELISON', color: '#f4d03f', meduse: 4, pspeed: 3.2, mspeed: 1.55, desc: 'Resa dei conti!', bg: '#000510' }
 ];
 
 const COLS = 20, ROWS = 12;
 const DR = [0, 1, 0, -1];
 const DC = [1, 0, -1, 0];
 
-// ======================== VARIABILI GLOBALI ========================
+// ======================== STATO ========================
 let canvas, ctx;
-let gameState = 'menu';
+let gameRunning = false;
+let animationId = null;
 let frame = 0;
+
 let score = 0, highScore = 0, lives = 3, zoneIdx = 0;
 let walls = [], pellets = [], powers = [], fishSpots = [];
 let totalCrabs = 0, eatenCrabs = 0;
+
 let player = { r: 1, c: 1, x: 0, y: 0, dir: 0, moving: false, prog: 0, dr: 0, dc: 0, invincible: 0 };
 let medusas = [];
-let fish = { active: false, x: 0, y: 0, timer: 0, dir: 1 };
+let fish = { active: false, x: 0, y: 0, timer: 0 };
 let fearTimer = 0;
-let wantDir = 0;
+let wantedDir = 0;
 let particles = [];
+
 let canvasW, canvasH, tileW, tileH, yOffset;
 
-// ======================== FUNZIONI UTILITY ========================
-function resizeAndDraw() {
-  const container = document.getElementById('game-container');
-  canvasW = container.clientWidth;
-  canvasH = container.clientHeight;
-  canvas.width = canvasW;
-  canvas.height = canvasH;
-  tileW = canvasW / COLS;
-  tileH = (canvasH - 40) / ROWS;
-  yOffset = 20;
-  if (gameState === 'playing') draw();
+// ======================== AUDIO ========================
+let audioCtx = null;
+function playSound(freq, dur, vol = 0.12) {
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state !== 'running') audioCtx.resume();
+    let osc = audioCtx.createOscillator();
+    let gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.type = 'sine';
+    osc.frequency.value = freq;
+    gain.gain.value = vol;
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+    osc.start();
+    osc.stop(audioCtx.currentTime + dur);
+  } catch(e) {}
 }
 
-function getCX(c) { return c * tileW + tileW / 2; }
-function getCY(r) { return yOffset + r * tileH + tileH / 2; }
-function isWall(r, c) { return r < 0 || r >= ROWS || c < 0 || c >= COLS || (walls[r] && walls[r][c]); }
+// ======================== UTILITY ========================
+function getCX(c) { return c * tileW + tileW/2; }
+function getCY(r) { return yOffset + r * tileH + tileH/2; }
+function isWall(r, c) { return r<0 || r>=ROWS || c<0 || c>=COLS || (walls[r] && walls[r][c]); }
 
-// ======================== MAPPA ========================
-function parseMap() {
-  walls = [];
-  pellets = [];
-  powers = [];
-  fishSpots = [];
-  totalCrabs = 0;
-  eatenCrabs = 0;
+function updateUI() {
+  document.getElementById('scoreValue').innerText = score;
+  document.getElementById('livesValue').innerText = lives;
+  document.getElementById('crabsValue').innerHTML = `${eatenCrabs}/${totalCrabs}`;
+  if (score > highScore) { highScore = score; document.getElementById('recordValue').innerText = highScore; }
   
-  for (let r = 0; r < ROWS; r++) {
-    walls[r] = [];
-    let row = MAPS[zoneIdx][r] || '';
-    while (row.length < COLS) row += ' ';
-    for (let c = 0; c < COLS; c++) {
-      let ch = row[c];
-      walls[r][c] = (ch === 'W');
-      if (ch === '.') { pellets.push({ r, c, eaten: false }); totalCrabs++; }
-      if (ch === 'o') { powers.push({ r, c, eaten: false }); }
-      if (ch === ' ' && r >= 4 && r <= 8) fishSpots.push({ r, c });
+  let percent = (fearTimer / 360) * 100;
+  document.getElementById('fear-bar').style.width = percent + '%';
+  
+  let msg = fish.active ? '🐟 ACCHIAPPA IL BRANZINO!' : `🦀 GRANCHI: ${eatenCrabs}/${totalCrabs}`;
+  document.getElementById('fish-message').innerHTML = msg;
+  
+  // Zone badges
+  for(let i=0; i<4; i++) {
+    let el = document.querySelector(`.zs[data-z="${i}"]`);
+    if(el) {
+      el.classList.remove('on', 'ok');
+      if(i < zoneIdx) el.classList.add('ok');
+      if(i === zoneIdx) el.classList.add('on');
     }
   }
+  document.getElementById('zoneName').innerHTML = ZONES_DATA[zoneIdx].name;
+  document.getElementById('zoneName').style.color = ZONES_DATA[zoneIdx].color;
+}
+
+// ======================== MAPPA ========================
+function loadMap() {
+  walls = []; pellets = []; powers = []; fishSpots = [];
+  totalCrabs = 0; eatenCrabs = 0;
   
-  if (fishSpots.length === 0) {
-    for (let r = 2; r < ROWS - 2; r++)
-      for (let c = 2; c < COLS - 2; c++)
-        if (!walls[r][c]) fishSpots.push({ r, c });
+  for(let r=0; r<ROWS; r++) {
+    walls[r] = [];
+    let row = MAPS[zoneIdx][r];
+    for(let c=0; c<COLS; c++) {
+      let ch = row[c];
+      walls[r][c] = (ch === 'W');
+      if(ch === '.') { pellets.push({r,c, eaten:false}); totalCrabs++; }
+      if(ch === 'o') { powers.push({r,c, eaten:false}); }
+      if(ch === ' ' && r>=4 && r<=8) fishSpots.push({r,c});
+    }
+  }
+  if(fishSpots.length === 0) {
+    for(let r=1; r<ROWS-1; r++)
+      for(let c=1; c<COLS-1; c++)
+        if(!walls[r][c]) fishSpots.push({r,c});
   }
 }
 
 function initPlayer() {
-  for (let r = 1; r < ROWS - 1; r++)
-    for (let c = 1; c < COLS - 1; c++)
-      if (!walls[r][c]) { player.r = r; player.c = c; break; }
+  for(let r=1; r<ROWS-1; r++)
+    for(let c=1; c<COLS-1; c++)
+      if(!walls[r][c]) { player.r = r; player.c = c; break; }
   player.x = getCX(player.c);
   player.y = getCY(player.r);
   player.dir = 0;
   player.moving = false;
   player.prog = 0;
   player.invincible = 0;
-  wantDir = 0;
+  wantedDir = 0;
 }
 
 function initMedusas() {
   medusas = [];
-  let n = ZONES[zoneIdx].mn;
-  let spd = ZONES[zoneIdx].ms / 60;
-  let starts = [[5, 10], [5, 9], [6, 11], [6, 9], [4, 10], [7, 10]];
-  for (let i = 0; i < n; i++) {
-    let s = starts[i] || [6, 10];
-    let r = s[0], c = s[1];
-    if (isWall(r, c)) {
-      for (let rr = 1; rr < ROWS - 1; rr++)
-        for (let cc = 1; cc < COLS - 1; cc++)
-          if (!walls[rr][cc]) { r = rr; c = cc; break; }
+  let n = ZONES_DATA[zoneIdx].meduse;
+  let spd = ZONES_DATA[zoneIdx].mspeed / 60;
+  let starts = [[5,10], [5,9], [6,11], [6,9], [4,10], [7,10]];
+  for(let i=0; i<n; i++) {
+    let s = starts[i] || [6,10];
+    let r=s[0], c=s[1];
+    if(isWall(r,c)) {
+      for(let rr=1; rr<ROWS-1; rr++)
+        for(let cc=1; cc<COLS-1; cc++)
+          if(!walls[rr][cc]) { r=rr; c=cc; break; }
     }
     medusas.push({
-      r, c, x: getCX(c), y: getCY(r), dir: 0, moving: false, prog: 0, dr: 0, dc: 0,
-      spd, frightened: false, eaten: false, col: `hsl(${280 + i * 30}, 70%, 65%)`
+      r, c, x: getCX(c), y: getCY(r),
+      dir: 0, moving: false, prog: 0, dr: 0, dc: 0,
+      spd: spd, frightened: false, eaten: false,
+      color: `hsl(${280 + i*30}, 75%, 65%)`
     });
   }
 }
 
 function spawnFish() {
-  if (fishSpots.length === 0) return;
+  if(fishSpots.length === 0) return;
   let spot = fishSpots[Math.floor(Math.random() * fishSpots.length)];
   fish.active = true;
   fish.x = getCX(spot.c);
   fish.y = getCY(spot.r);
   fish.timer = 400 + Math.random() * 150;
-  fish.dir = Math.random() > 0.5 ? 1 : -1;
+  playSound(520, 0.15, 0.15);
 }
 
 // ======================== MOVIMENTO ========================
 function moveEntity(e, targetDir) {
-  if (!e.moving) {
+  if(!e.moving) {
     let dirs = [targetDir, e.dir];
-    for (let d of dirs) {
+    for(let d of dirs) {
       let nr = e.r + DR[d], nc = e.c + DC[d];
-      if (!isWall(nr, nc)) {
+      if(!isWall(nr, nc)) {
         e.dir = d;
         e.dr = DR[d];
         e.dc = DC[d];
@@ -450,25 +553,20 @@ function moveEntity(e, targetDir) {
       }
     }
   }
-  
-  if (e.moving) {
-    let spd = e.spd || ZONES[zoneIdx].ps / 60;
-    e.prog += spd;
-    if (e.prog >= 1) {
+  if(e.moving) {
+    let speed = e.spd || ZONES_DATA[zoneIdx].pspeed / 60;
+    e.prog += speed;
+    if(e.prog >= 1) {
       e.r += e.dr;
       e.c += e.dc;
       e.x = getCX(e.c);
       e.y = getCY(e.r);
       e.moving = false;
       e.prog = 0;
-      if (!isWall(e.r + DR[targetDir], e.c + DC[targetDir])) {
+      if(!isWall(e.r + DR[targetDir], e.c + DC[targetDir])) {
         e.dir = targetDir;
         e.dr = DR[targetDir];
         e.dc = DC[targetDir];
-        e.moving = true;
-      } else if (!isWall(e.r + DR[e.dir], e.c + DC[e.dir])) {
-        e.dr = DR[e.dir];
-        e.dc = DC[e.dir];
         e.moving = true;
       }
     } else {
@@ -479,379 +577,451 @@ function moveEntity(e, targetDir) {
 }
 
 function medusaAI(m) {
-  if (m.moving) return m.dir;
+  if(m.moving) return m.dir;
   let pr = player.r, pc = player.c;
-  
-  if (m.frightened) {
+  if(m.frightened) {
     let best = -1, bestDist = -1;
-    for (let d = 0; d < 4; d++) {
-      if (isWall(m.r + DR[d], m.c + DC[d])) continue;
-      let dist = (m.r + DR[d] - pr) ** 2 + (m.c + DC[d] - pc) ** 2;
-      if (dist > bestDist) { bestDist = dist; best = d; }
+    for(let d=0; d<4; d++) {
+      if(isWall(m.r+DR[d], m.c+DC[d])) continue;
+      let dist = (m.r+DR[d]-pr)**2 + (m.c+DC[d]-pc)**2;
+      if(dist > bestDist) { bestDist = dist; best = d; }
     }
     return best >= 0 ? best : m.dir;
   }
-  
   let best = -1, bestDist = 9999;
-  for (let d = 0; d < 4; d++) {
-    if (isWall(m.r + DR[d], m.c + DC[d])) continue;
-    let dist = (m.r + DR[d] - pr) ** 2 + (m.c + DC[d] - pc) ** 2;
-    if (dist < bestDist) { bestDist = dist; best = d; }
+  for(let d=0; d<4; d++) {
+    if(isWall(m.r+DR[d], m.c+DC[d])) continue;
+    let dist = (m.r+DR[d]-pr)**2 + (m.c+DC[d]-pc)**2;
+    if(dist < bestDist) { bestDist = dist; best = d; }
   }
   return best >= 0 ? best : m.dir;
 }
 
-// ======================== UPDATE UI ========================
-function updateUI() {
-  document.getElementById('scoreDisplay').innerText = score;
-  let hearts = '';
-  for (let i = 0; i < lives; i++) hearts += '❤️';
-  for (let i = lives; i < 3; i++) hearts += '🖤';
-  document.getElementById('livesDisplay').innerHTML = hearts;
-  document.getElementById('crabsDisplay').innerHTML = `${eatenCrabs}/${totalCrabs}`;
-  document.getElementById('fish-alert').innerHTML = fish.active ? '🐟 ACCHIAPPA!' : `🦀 ${eatenCrabs}/${totalCrabs}`;
-  if (score > highScore) { highScore = score; document.getElementById('recordDisplay').innerText = highScore; }
-  
-  // Fear bar
-  let percent = (fearTimer / 360) * 100;
-  document.getElementById('fearFill').style.width = percent + '%';
-}
-
-// ======================== GAME LOGIC ========================
+// ======================== UPDATE ========================
 function updateGame() {
-  if (gameState !== 'playing') return;
+  if(!gameRunning) return;
   frame++;
   
-  moveEntity(player, wantDir);
+  moveEntity(player, wantedDir);
   
-  for (let m of medusas) {
-    if (m.eaten) continue;
+  for(let m of medusas) {
+    if(m.eaten) continue;
     let oldSpd = m.spd;
-    if (m.frightened) m.spd = oldSpd * 0.45;
+    if(m.frightened) m.spd = oldSpd * 0.45;
     moveEntity(m, medusaAI(m));
     m.spd = oldSpd;
   }
   
-  // Eat pellets
-  for (let p of pellets) {
-    if (p.eaten) continue;
-    if (p.r === player.r && p.c === player.c) {
+  // Eat blue crabs
+  for(let p of pellets) {
+    if(p.eaten) continue;
+    if(p.r === player.r && p.c === player.c) {
       p.eaten = true;
       eatenCrabs++;
       score += 10;
-      sfxEat();
-      particles.push({ x: getCX(p.c), y: getCY(p.r), life: 0.8, txt: '+10', col: '#4488ff' });
+      playSound(800, 0.06);
+      particles.push({ x: getCX(p.c), y: getCY(p.r), life: 0.7, txt: '+10', col: '#4488ff' });
       updateUI();
-      if (eatenCrabs >= totalCrabs && !fish.active) {
-        spawnFish();
-        particles.push({ x: canvasW / 2, y: yOffset + 50, life: 1.2, txt: '🐟 ACCHIAPPA!', col: '#f4d03f' });
-      }
+      if(eatenCrabs >= totalCrabs && !fish.active) spawnFish();
     }
   }
   
-  // Eat powers
-  for (let p of powers) {
-    if (p.eaten) continue;
-    if (p.r === player.r && p.c === player.c) {
+  // Eat golden crabs (power-ups)
+  for(let p of powers) {
+    if(p.eaten) continue;
+    if(p.r === player.r && p.c === player.c) {
       p.eaten = true;
       score += 50;
-      sfxPower();
       fearTimer = 360;
-      for (let m of medusas) { m.frightened = true; m.eaten = false; }
+      playSound(300, 0.12);
+      for(let m of medusas) { m.frightened = true; m.eaten = false; }
       particles.push({ x: getCX(p.c), y: getCY(p.r), life: 0.8, txt: '⚡ POWER!', col: '#ffcc00' });
       updateUI();
     }
   }
   
-  if (fearTimer > 0) {
+  if(fearTimer > 0) {
     fearTimer--;
     updateUI();
-    if (fearTimer === 0) for (let m of medusas) m.frightened = false;
+    if(fearTimer === 0) for(let m of medusas) m.frightened = false;
   }
   
-  // Fish catch
-  if (fish.active) {
+  // Catch fish
+  if(fish.active) {
     fish.timer--;
     let dx = player.x - fish.x, dy = player.y - fish.y;
-    if (Math.hypot(dx, dy) < Math.min(tileW, tileH) * 0.7) {
+    if(Math.hypot(dx, dy) < Math.min(tileW, tileH) * 0.65) {
       fish.active = false;
       score += 500;
-      sfxWin();
-      particles.push({ x: player.x, y: player.y - 20, life: 1, txt: '+500 PRESO!', col: '#00ff88' });
+      playSound(523, 0.2);
+      particles.push({ x: player.x, y: player.y-15, life: 1, txt: '+500 PRESO!', col: '#00ff88' });
       updateUI();
       
-      if (zoneIdx < 3) {
-        gameState = 'zoneTransition';
-        document.getElementById('zoneTitle').innerHTML = `🌊 ${ZONES[zoneIdx + 1].name} 🌊`;
-        document.getElementById('zoneDesc').innerHTML = `Nuova zona sbloccata!<br>Bonus +300 punti!<br><span style="color:#00e5ff">Meduse: ${ZONES[zoneIdx + 1].mn}</span>`;
+      if(zoneIdx < 3) {
+        gameRunning = false;
+        document.getElementById('zoneTitle').innerHTML = `🌊 ${ZONES_DATA[zoneIdx+1].name} 🌊`;
+        document.getElementById('zoneDesc').innerHTML = `${ZONES_DATA[zoneIdx+1].desc}<br><br>Bonus +300 punti!<br>Meduse: ${ZONES_DATA[zoneIdx+1].meduse}`;
         document.getElementById('zoneOverlay').classList.remove('hidden');
-        sfxZone();
+        playSound(440, 0.15);
       } else {
-        if (score > highScore) highScore = score;
-        document.getElementById('finalScore').innerHTML = `PUNTI: ${score}<br>RECORD: ${highScore}`;
+        if(score > highScore) highScore = score;
+        document.getElementById('finalScoreText').innerHTML = `PUNTI: ${score}<br>RECORD: ${highScore}`;
         document.getElementById('gameoverOverlay').classList.remove('hidden');
-        gameState = 'gameover';
+        gameRunning = false;
       }
       return;
     }
-    if (fish.timer <= 0) {
+    if(fish.timer <= 0) {
       fish.active = false;
-      setTimeout(() => { if (gameState === 'playing') spawnFish(); }, 2000);
+      setTimeout(() => { if(gameRunning) spawnFish(); }, 2000);
     }
   }
   
   // Medusa collision
-  if (player.invincible === 0) {
-    for (let m of medusas) {
-      if (m.eaten) continue;
-      if (Math.hypot(player.x - m.x, player.y - m.y) < Math.min(tileW, tileH) * 0.55) {
-        if (m.frightened) {
+  if(player.invincible === 0) {
+    for(let m of medusas) {
+      if(m.eaten) continue;
+      if(Math.hypot(player.x - m.x, player.y - m.y) < Math.min(tileW, tileH) * 0.55) {
+        if(m.frightened) {
           m.eaten = true;
           score += 200;
-          sfxEat();
-          particles.push({ x: m.x, y: m.y - 10, life: 0.6, txt: '+200!', col: '#00ccff' });
+          playSound(600, 0.08);
+          particles.push({ x: m.x, y: m.y-10, life: 0.6, txt: '+200!', col: '#00ccff' });
           updateUI();
         } else {
           lives--;
-          sfxHit();
+          playSound(200, 0.18);
           player.invincible = 80;
-          for (let i = 0; i < 8; i++) particles.push({ x: player.x, y: player.y, life: 0.4, txt: '💢', col: '#ff6600' });
+          for(let i=0;i<8;i++) particles.push({ x: player.x, y: player.y, life: 0.4, txt: '💢', col: '#ff6600' });
           updateUI();
-          if (lives <= 0) {
-            if (score > highScore) highScore = score;
-            document.getElementById('finalScore').innerHTML = `PUNTI: ${score}<br>RECORD: ${highScore}`;
+          if(lives <= 0) {
+            if(score > highScore) highScore = score;
+            document.getElementById('finalScoreText').innerHTML = `PUNTI: ${score}<br>RECORD: ${highScore}`;
             document.getElementById('gameoverOverlay').classList.remove('hidden');
-            gameState = 'gameover';
+            gameRunning = false;
           }
           break;
         }
       }
     }
   }
-  if (player.invincible > 0) player.invincible--;
+  if(player.invincible > 0) player.invincible--;
   
-  for (let i = particles.length - 1; i >= 0; i--) {
+  // Particles update
+  for(let i=particles.length-1; i>=0; i--) {
     particles[i].life -= 0.02;
-    if (particles[i].life <= 0) particles.splice(i, 1);
+    if(particles[i].life <= 0) particles.splice(i,1);
   }
 }
 
-// ======================== DRAW ========================
+// ======================== DRAW (GRAFICA RICCA) ========================
 function draw() {
-  if (!ctx) return;
+  if(!ctx) return;
   ctx.clearRect(0, 0, canvasW, canvasH);
   
+  // Gradient background per zona
   let grad = ctx.createLinearGradient(0, 0, 0, canvasH);
-  grad.addColorStop(0, '#001a2a');
-  grad.addColorStop(1, '#002c1a');
+  grad.addColorStop(0, ZONES_DATA[zoneIdx].bg);
+  grad.addColorStop(1, '#000c1a');
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, canvasW, canvasH);
   
-  // Walls
-  for (let r = 0; r < ROWS; r++) {
-    for (let c = 0; c < COLS; c++) {
-      if (walls[r][c]) {
-        let x = c * tileW, y = yOffset + r * tileH;
-        ctx.fillStyle = '#0a2a1a';
+  // Onde animate
+  ctx.strokeStyle = 'rgba(0, 180, 200, 0.08)';
+  ctx.lineWidth = 1.5;
+  for(let i=0; i<8; i++) {
+    let yo = Math.sin(frame * 0.02 + i * 0.8) * 3;
+    ctx.beginPath();
+    ctx.moveTo(0, yOffset + 15 + i * 45 + yo);
+    ctx.lineTo(canvasW, yOffset + 18 + i * 45 + yo);
+    ctx.stroke();
+  }
+  
+  // Walls with decorations
+  for(let r=0; r<ROWS; r++) {
+    for(let c=0; c<COLS; c++) {
+      if(walls[r][c]) {
+        let x = c*tileW, y = yOffset + r*tileH;
+        let gradWall = ctx.createLinearGradient(x, y, x+5, y+5);
+        gradWall.addColorStop(0, '#0a2a1a');
+        gradWall.addColorStop(1, '#0a3a2a');
+        ctx.fillStyle = gradWall;
         ctx.fillRect(x, y, tileW, tileH);
-        ctx.strokeStyle = '#1a6a3a';
-        ctx.strokeRect(x + 1, y + 1, tileW - 2, tileH - 2);
+        ctx.strokeStyle = '#1a8a4a';
+        ctx.lineWidth = 1.2;
+        ctx.strokeRect(x+2, y+2, tileW-4, tileH-4);
+        
+        // Decoration
+        if((r+c) % 7 === 0) {
+          ctx.fillStyle = 'rgba(0, 200, 100, 0.2)';
+          ctx.fillRect(x+5, y+5, tileW-10, tileH-10);
+        }
       }
     }
   }
   
-  // Blue crabs
-  for (let p of pellets) {
-    if (p.eaten) continue;
-    let x = getCX(p.c), y = getCY(p.r) + Math.sin(frame * 0.1 + p.c) * 2;
-    ctx.fillStyle = '#1144cc';
+  // Blue crabs (granchi blu)
+  for(let p of pellets) {
+    if(p.eaten) continue;
+    let x = getCX(p.c), y = getCY(p.r) + Math.sin(frame * 0.1) * 2;
+    ctx.shadowBlur = 6;
+    ctx.shadowColor = '#4488ff';
+    ctx.fillStyle = '#2266dd';
     ctx.beginPath();
-    ctx.ellipse(x, y, tileW * 0.18, tileH * 0.18, 0, 0, Math.PI * 2);
+    ctx.ellipse(x, y, tileW*0.14, tileH*0.12, 0, 0, Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = '#88aaff';
+    ctx.beginPath();
+    ctx.ellipse(x-3, y-2, 2, 2, 0, 0, Math.PI*2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(x+3, y-2, 2, 2, 0, 0, Math.PI*2);
     ctx.fill();
   }
   
   // Golden crabs
-  for (let p of powers) {
-    if (p.eaten) continue;
+  for(let p of powers) {
+    if(p.eaten) continue;
     let x = getCX(p.c), y = getCY(p.r) + Math.sin(frame * 0.12) * 3;
+    ctx.shadowBlur = 10;
+    ctx.shadowColor = '#ffcc00';
     ctx.fillStyle = '#ffaa00';
     ctx.beginPath();
-    ctx.ellipse(x, y, tileW * 0.22, tileH * 0.22, 0, 0, Math.PI * 2);
+    ctx.ellipse(x, y, tileW*0.16, tileH*0.14, 0, 0, Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = '#ffdd66';
+    ctx.beginPath();
+    ctx.ellipse(x-4, y-3, 2, 2, 0, 0, Math.PI*2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(x+4, y-3, 2, 2, 0, 0, Math.PI*2);
     ctx.fill();
   }
   
   // Medusas
-  for (let m of medusas) {
-    if (m.eaten) continue;
-    let col = m.frightened ? '#00ccff' : m.col;
+  for(let m of medusas) {
+    if(m.eaten) continue;
+    let col = m.frightened ? '#00ccff' : m.color;
+    ctx.shadowBlur = m.frightened ? 16 : 10;
+    ctx.shadowColor = col;
     ctx.fillStyle = col;
     ctx.beginPath();
-    ctx.ellipse(m.x, m.y - 5, tileW * 0.18, tileH * 0.14, 0, 0, Math.PI * 2);
+    ctx.ellipse(m.x, m.y-6, tileW*0.14, tileH*0.1, 0, 0, Math.PI*2);
     ctx.fill();
-    for (let i = -2; i <= 2; i++) {
+    for(let i=-2; i<=2; i++) {
       ctx.beginPath();
-      ctx.moveTo(m.x + i * 6, m.y);
-      ctx.quadraticCurveTo(m.x + i * 5, m.y + 10, m.x + i * 6, m.y + 18);
+      ctx.moveTo(m.x + i*6, m.y-2);
+      ctx.quadraticCurveTo(m.x + i*5, m.y+8, m.x + i*6, m.y+16);
       ctx.strokeStyle = col;
+      ctx.lineWidth = 1.5;
       ctx.stroke();
     }
     ctx.fillStyle = '#fff';
-    ctx.fillRect(m.x - 7, m.y - 10, 3, 3);
-    ctx.fillRect(m.x + 4, m.y - 10, 3, 3);
+    ctx.fillRect(m.x-6, m.y-10, 3, 3);
+    ctx.fillRect(m.x+3, m.y-10, 3, 3);
+    if(m.frightened) {
+      ctx.fillStyle = '#ff0000';
+      ctx.fillRect(m.x-2, m.y-14, 4, 3);
+    }
   }
   
-  // Boat
-  if (player.invincible === 0 || Math.floor(frame / 5) % 2 === 0) {
+  // Boat (player)
+  if(player.invincible === 0 || Math.floor(frame/5)%2 === 0) {
+    ctx.shadowBlur = 12;
+    ctx.shadowColor = '#00e5ff';
     ctx.fillStyle = '#cc8833';
-    ctx.fillRect(player.x - 12, player.y - 8, 24, 16);
+    ctx.fillRect(player.x-14, player.y-9, 28, 18);
     ctx.fillStyle = '#aa6622';
-    ctx.fillRect(player.x - 10, player.y - 6, 20, 12);
+    ctx.fillRect(player.x-12, player.y-7, 24, 14);
     ctx.fillStyle = '#ddeeff';
-    ctx.fillRect(player.x - 6, player.y - 5, 12, 10);
+    ctx.fillRect(player.x-8, player.y-6, 16, 12);
+    ctx.fillStyle = '#88bbff';
+    ctx.fillRect(player.x-6, player.y-5, 5, 5);
+    ctx.fillRect(player.x+1, player.y-5, 5, 5);
     ctx.fillStyle = '#ff4444';
-    ctx.font = 'bold 6px monospace';
-    ctx.fillText('⚓', player.x - 2, player.y + 2);
+    ctx.font = 'bold 6px "Press Start 2P"';
+    ctx.fillText('⛵', player.x-4, player.y+2);
+    ctx.fillStyle = '#aaaaaa';
+    ctx.fillRect(player.x-14, player.y-4, 4, 8);
   }
   
-  // Fish
-  if (fish.active) {
+  // Fish (Branzino)
+  if(fish.active) {
+    ctx.shadowBlur = 12;
+    ctx.shadowColor = '#88ccff';
     ctx.fillStyle = '#88aacc';
     ctx.beginPath();
-    ctx.ellipse(fish.x, fish.y, tileW * 0.2, tileH * 0.16, 0, 0, Math.PI * 2);
+    ctx.ellipse(fish.x, fish.y, tileW*0.16, tileH*0.12, 0, 0, Math.PI*2);
     ctx.fill();
     ctx.fillStyle = '#cceeff';
     ctx.beginPath();
-    ctx.ellipse(fish.x - 5, fish.y - 2, 4, 3, 0, 0, Math.PI * 2);
+    ctx.ellipse(fish.x-5, fish.y-2, 4, 3, 0, 0, Math.PI*2);
     ctx.fill();
     ctx.fillStyle = '#111';
-    ctx.fillRect(fish.x - 7, fish.y - 4, 3, 3);
+    ctx.fillRect(fish.x-8, fish.y-4, 3, 3);
+    ctx.fillStyle = '#ffcc00';
+    ctx.beginPath();
+    ctx.ellipse(fish.x-7, fish.y-3, 2, 2, 0, 0, Math.PI*2);
+    ctx.fill();
   }
   
   // Particles
-  for (let p of particles) {
+  for(let p of particles) {
     ctx.globalAlpha = p.life;
     ctx.fillStyle = p.col;
-    ctx.font = 'bold 8px "Press Start 2P"';
+    ctx.font = 'bold 9px "Press Start 2P"';
     ctx.textAlign = 'center';
+    ctx.shadowBlur = 8;
     ctx.fillText(p.txt, p.x, p.y);
   }
   ctx.globalAlpha = 1;
+  ctx.shadowBlur = 0;
+  
+  // Catch prompt
+  if(fish.active) {
+    ctx.font = 'bold 9px "Press Start 2P"';
+    ctx.fillStyle = '#f4d03f';
+    ctx.textAlign = 'center';
+    ctx.shadowBlur = 10;
+    ctx.shadowColor = '#f4d03f';
+    ctx.globalAlpha = 0.6 + Math.sin(frame * 0.1) * 0.3;
+    ctx.fillText('🎣 ACCHIAPPA!', canvasW/2, yOffset + 12);
+    ctx.globalAlpha = 1;
+  }
+}
+
+// ======================== RESIZE ========================
+function resizeCanvas() {
+  canvasW = window.innerWidth;
+  canvasH = window.innerHeight;
+  canvas.width = canvasW;
+  canvas.height = canvasH;
+  tileW = canvasW / COLS;
+  tileH = (canvasH - 40) / ROWS;
+  yOffset = 25;
+  
+  if(player) {
+    player.x = getCX(player.c);
+    player.y = getCY(player.r);
+    for(let m of medusas) {
+      m.x = getCX(m.c);
+      m.y = getCY(m.r);
+    }
+    if(fish.active && fishSpots.length) {
+      fish.x = getCX(fishSpots[0]?.c || 10);
+      fish.y = getCY(fishSpots[0]?.r || 5);
+    }
+  }
+  draw();
 }
 
 // ======================== GAME FLOW ========================
-function initNewZone() {
-  zoneIdx++;
-  score += 300;
-  updateUI();
-  parseMap();
-  initPlayer();
-  initMedusas();
-  fish.active = false;
-  fearTimer = 0;
-  eatenCrabs = 0;
-  
-  for (let i = 0; i < 4; i++) {
-    let el = document.querySelector(`.zs[data-z="${i}"]`);
-    if (el) el.className = `zs ${i < zoneIdx ? 'ok' : (i === zoneIdx ? 'on' : '')}`;
-  }
-  document.getElementById('zone-name').innerHTML = ZONES[zoneIdx].name;
-  document.getElementById('zone-name').style.color = ZONES[zoneIdx].col;
-  gameState = 'playing';
-}
-
 function startGame() {
+  gameRunning = true;
   score = 0;
   lives = 3;
   zoneIdx = 0;
   fearTimer = 0;
-  parseMap();
+  frame = 0;
+  
+  loadMap();
   initPlayer();
   initMedusas();
   fish.active = false;
   eatenCrabs = 0;
-  gameState = 'playing';
-  frame = 0;
-  updateUI();
   
-  document.getElementById('zone-name').innerHTML = ZONES[0].name;
-  document.getElementById('zone-name').style.color = ZONES[0].col;
-  for (let i = 0; i < 4; i++) {
-    let el = document.querySelector(`.zs[data-z="${i}"]`);
-    if (el) el.className = `zs ${i === 0 ? 'on' : ''}`;
-  }
+  updateUI();
+  resizeCanvas();
   
   document.getElementById('startOverlay').classList.add('hidden');
   document.getElementById('gameoverOverlay').classList.add('hidden');
   document.getElementById('zoneOverlay').classList.add('hidden');
 }
 
-// ======================== TOUCH CONTROLLI ========================
-function setupTouchControls() {
-  document.getElementById('touchUp').addEventListener('touchstart', (e) => { e.preventDefault(); wantDir = 3; });
-  document.getElementById('touchDown').addEventListener('touchstart', (e) => { e.preventDefault(); wantDir = 1; });
-  document.getElementById('touchLeft').addEventListener('touchstart', (e) => { e.preventDefault(); wantDir = 2; });
-  document.getElementById('touchRight').addEventListener('touchstart', (e) => { e.preventDefault(); wantDir = 0; });
+function nextZone() {
+  zoneIdx++;
+  score += 300;
+  loadMap();
+  initPlayer();
+  initMedusas();
+  fish.active = false;
+  eatenCrabs = 0;
+  fearTimer = 0;
+  gameRunning = true;
+  updateUI();
+  resizeCanvas();
+  document.getElementById('zoneOverlay').classList.add('hidden');
+}
+
+// ======================== TOUCH CONTROLS ========================
+function setupControls() {
+  document.getElementById('touchUp').addEventListener('touchstart', (e) => { e.preventDefault(); wantedDir = 3; playSound(800, 0.03, 0.05); });
+  document.getElementById('touchDown').addEventListener('touchstart', (e) => { e.preventDefault(); wantedDir = 1; playSound(800, 0.03, 0.05); });
+  document.getElementById('touchLeft').addEventListener('touchstart', (e) => { e.preventDefault(); wantedDir = 2; playSound(800, 0.03, 0.05); });
+  document.getElementById('touchRight').addEventListener('touchstart', (e) => { e.preventDefault(); wantedDir = 0; playSound(800, 0.03, 0.05); });
   
-  let dragStart = null;
+  let touchStart = null;
   canvas.addEventListener('touchstart', (e) => {
     e.preventDefault();
     let rect = canvas.getBoundingClientRect();
     let scaleX = canvas.width / rect.width;
     let scaleY = canvas.height / rect.height;
-    dragStart = { x: (e.touches[0].clientX - rect.left) * scaleX, y: (e.touches[0].clientY - rect.top) * scaleY };
+    touchStart = {
+      x: (e.touches[0].clientX - rect.left) * scaleX,
+      y: (e.touches[0].clientY - rect.top) * scaleY
+    };
   });
   
   canvas.addEventListener('touchmove', (e) => {
     e.preventDefault();
-    if (!dragStart) return;
+    if(!touchStart) return;
     let rect = canvas.getBoundingClientRect();
     let scaleX = canvas.width / rect.width;
     let scaleY = canvas.height / rect.height;
     let x = (e.touches[0].clientX - rect.left) * scaleX;
     let y = (e.touches[0].clientY - rect.top) * scaleY;
-    let dx = x - dragStart.x, dy = y - dragStart.y;
-    if (Math.abs(dx) > 20 || Math.abs(dy) > 20) {
-      if (Math.abs(dx) > Math.abs(dy)) wantDir = dx > 0 ? 0 : 2;
-      else wantDir = dy > 0 ? 1 : 3;
-      dragStart = null;
+    let dx = x - touchStart.x;
+    let dy = y - touchStart.y;
+    if(Math.abs(dx) > 20 || Math.abs(dy) > 20) {
+      if(Math.abs(dx) > Math.abs(dy)) wantedDir = dx > 0 ? 0 : 2;
+      else wantedDir = dy > 0 ? 1 : 3;
+      touchStart = null;
+      playSound(800, 0.03, 0.05);
     }
   });
-  canvas.addEventListener('touchend', () => { dragStart = null; });
+  canvas.addEventListener('touchend', () => { touchStart = null; });
   
   // Keyboard support
   window.addEventListener('keydown', (e) => {
-    if (e.key === 'ArrowRight' || e.key === 'd') wantDir = 0;
-    if (e.key === 'ArrowDown' || e.key === 's') wantDir = 1;
-    if (e.key === 'ArrowLeft' || e.key === 'a') wantDir = 2;
-    if (e.key === 'ArrowUp' || e.key === 'w') wantDir = 3;
-    if (gameState === 'zoneTransition' && e.key === ' ') initNewZone();
+    if(e.key === 'ArrowRight' || e.key === 'd') wantedDir = 0;
+    if(e.key === 'ArrowDown' || e.key === 's') wantedDir = 1;
+    if(e.key === 'ArrowLeft' || e.key === 'a') wantedDir = 2;
+    if(e.key === 'ArrowUp' || e.key === 'w') wantedDir = 3;
     e.preventDefault();
   });
 }
 
-// ======================== GAME LOOP ========================
-function gameLoop() {
-  updateGame();
-  draw();
-  requestAnimationFrame(gameLoop);
-}
-
-// ======================== INIT ========================
+// ======================== MAIN LOOP ========================
 window.onload = () => {
   canvas = document.getElementById('gameCanvas');
   ctx = canvas.getContext('2d');
-  resizeAndDraw();
-  window.addEventListener('resize', () => { resizeAndDraw(); draw(); });
-  setupTouchControls();
   
-  document.getElementById('startBtn').onclick = () => startGame();
-  document.getElementById('restartBtn').onclick = () => startGame();
-  document.getElementById('zoneOverlay').addEventListener('click', () => {
-    if (gameState === 'zoneTransition') initNewZone();
-    document.getElementById('zoneOverlay').classList.add('hidden');
-  });
+  setupControls();
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
   
-  gameLoop();
+  document.getElementById('startBtn').onclick = startGame;
+  document.getElementById('restartBtn').onclick = startGame;
+  document.getElementById('zoneOverlay').onclick = () => {
+    if(!gameRunning && zoneIdx < 3) nextZone();
+  };
+  
+  function loop() {
+    updateGame();
+    draw();
+    requestAnimationFrame(loop);
+  }
+  loop();
 };
 </script>
 </body>
