@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>LAGUNA CHASE - Caccia al Branzino</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  background: #000c1a;
+  font-family: 'Press Start 2P', monospace;
+  overflow: hidden;
+  touch-action: none;
+  position: fixed;
+  width: 100%;
+  height: 100%;
+}
+
+#game-container {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #000;
+}
+
+canvas {
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  cursor: crosshair;
+  touch-action: none;
+}
+
+/* Overlay informazioni - minimali e trasparenti */
+#top-info {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  padding: 6px 12px;
+  border-radius: 20px;
+  border: 1px solid rgba(0, 229, 255, 0.3);
+  z-index: 20;
+  font-size: 8px;
+  pointer-events: none;
+  font-family: 'Press Start 2P', monospace;
+}
+
+#top-info span { color: #f4d03f; }
+#top-info .label { color: #00e5ff; font-size: 7px; margin-right: 4px; }
+
+#bottom-info {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  right: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(8px);
+  padding: 6px 14px;
+  border-radius: 25px;
+  border: 1px solid rgba(0, 229, 255, 0.25);
+  z-index: 20;
+  font-size: 7px;
+  pointer-events: none;
+}
+
+.zone-badge {
+  display: flex;
+  gap: 6px;
+}
+
+.zs {
+  padding: 3px 6px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  font-size: 6px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.zs.on { color: #00e5ff; border-color: #00e5ff; background: rgba(0, 229, 255, 0.15); }
+.zs.ok { color: #00ff88; border-color: #00ff88; }
+
+#zone-name { color: #00e5ff; font-size: 7px; }
+#fish-alert { color: #f4d03f; font-size: 6px; }
+
+/* Bottoni touch flottanti */
+.touch-buttons {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  display: flex;
+  gap: 10px;
+  z-index: 30;
+  pointer-events: none;
+}
+
+.tb {
+  width: 65px;
+  height: 65px;
+  border-radius: 50%;
+  background: rgba(0, 229, 255, 0.12);
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(0, 229, 255, 0.5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  color: #00e5ff;
+  pointer-events: auto;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: 0.02s linear;
+  font-family: monospace;
+}
+
+.tb span { font-size: 7px; margin-top: 2px; opacity: 0.8; }
+.tb:active { background: rgba(0, 229, 255, 0.35); transform: scale(0.94); }
+
+/* Overlay modali */
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 6, 20, 0.96);
+  backdrop-filter: blur(12px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  z-index: 100;
+  text-align: center;
+  padding: 20px;
+}
+
+.overlay-title {
+  font-size: 14px;
+  color: #f4d03f;
+  text-shadow: 0 0 12px currentColor;
+  line-height: 1.6;
+}
+
+.overlay-desc {
+  font-size: 8px;
+  color: rgba(255, 255, 255, 0.85);
+  max-width: 85%;
+  line-height: 1.8;
+}
+
+.overlay-btn {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  padding: 12px 24px;
+  background: transparent;
+  border: 2px solid #00e5ff;
+  color: #00e5ff;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: 0.1s;
+}
+
+.overlay-btn:active { background: rgba(0, 229, 255, 0.2); }
+
+.hidden { display: none; }
+
+.blink {
+  animation: blinkAnim 1s infinite;
+}
+
+@keyframes blinkAnim {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.fear-bar {
+  position: absolute;
+  top: 55px;
+  left: 10px;
+  width: 100px;
+  height: 4px;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 2px;
+  overflow: hidden;
+  z-index: 20;
+  pointer-events: none;
+}
+
+.fear-fill {
+  height: 100%;
+  width: 0%;
+  background: #00ccff;
+  transition: width 0.05s linear;
+}
+</style>
+</head>
+<body>
+<div id="game-container">
+  <canvas id="gameCanvas"></canvas>
+  
+  <div id="top-info">
+    <div>🏆 <span id="scoreDisplay">0</span></div>
+    <div>❤️ <span id="livesDisplay">3</span></div>
+    <div>🦀 <span id="crabsDisplay">0/0</span></div>
+    <div>🏅 <span id="recordDisplay">0</span></div>
+  </div>
+  
+  <div class="fear-bar" id="fearBar">
+    <div class="fear-fill" id="fearFill"></div>
+  </div>
+  
+  <div id="bottom-info">
+    <div class="zone-badge" id="zoneBadges">
+      <span class="zs on" data-z="0">⚓ M</span>
+      <span class="zs" data-z="1">🌿 SL</span>
+      <span class="zs" data-z="2">⛽ CP</span>
+      <span class="zs" data-z="3">🌊 CM</span>
+    </div>
+    <div id="zone-name">MORANZANI</div>
+    <div id="fish-alert">🦀 0/0</div>
+  </div>
+  
+  <div class="touch-buttons">
+    <div class="tb" id="touchUp">▲<span>SU</span></div>
+    <div class="tb" id="touchDown">▼<span>GIU</span></div>
+    <div class="tb" id="touchLeft">◀<span>SX</span></div>
+    <div class="tb" id="touchRight">▶<span>DX</span></div>
+  </div>
+  
+  <!-- START OVERLAY -->
+  <div class="overlay" id="startOverlay">
+    <div class="overlay-title">🎣 LAGUNA CHASE 🎣</div>
+    <div class="overlay-desc">
+      ENNIO E SANDRO A CACCIA DEL BRANZINO<br><br>
+      Mangia tutti i <b style="color:#4488ff">GRANCHI BLU</b><br>
+      Poi acchiappa il <b style="color:#c8e8ff">BRANZINO</b><br><br>
+      🟡 I GRANCHI DORATI<br>spaventano le MEDUSE per 6s!
+    </div>
+    <button class="overlay-btn" id="startBtn">▶ CALA LA LENZA ◀</button>
+    <div style="font-size: 5px; color: rgba(0,229,255,0.5); margin-top: 8px;">TOUCH DRAG • BOTTONI • FRECCE</div>
+  </div>
+  
+  <!-- GAME OVER -->
+  <div class="overlay hidden" id="gameoverOverlay">
+    <div class="overlay-title" style="color:#ff6b35">💀 GAME OVER 💀</div>
+    <div class="overlay-desc">Il branzino è scappato!<br>Riprova!</div>
+    <div class="overlay-desc" id="finalScore"></div>
+    <button class="overlay-btn" id="restartBtn">▶ RIPROVA ◀</button>
+  </div>
+  
+  <!-- ZONE TRANSITION -->
+  <div class="overlay hidden" id="zoneOverlay">
+    <div class="overlay-title" id="zoneTitle">🌊 NUOVA ZONA</div>
+    <div class="overlay-desc" id="zoneDesc"></div>
+    <div class="overlay-desc blink" style="font-size: 7px;">Tocca per continuare...</div>
+  </div>
+</div>
+
+<script>
+// ======================== AUDIO ========================
+let audioCtx = null;
+function getAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state !== 'running') audioCtx.resume();
+  return audioCtx;
+}
+function playBeep(freq, dur, vol = 0.1) {
+  try {
+    let ctx = getAudio();
+    let osc = ctx.createOscillator();
+    let gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = 'sine';
+    osc.frequency.value = freq;
+    gain.gain.value = vol;
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+    osc.start();
+    osc.stop(ctx.currentTime + dur);
+  } catch(e) {}
+}
+function sfxEat() { playBeep(800, 0.06, 0.12); playBeep(600, 0.08, 0.1); }
+function sfxPower() { [300, 450, 600].forEach((f, i) => setTimeout(() => playBeep(f, 0.1, 0.12), i * 50)); }
+function sfxHit() { playBeep(200, 0.15, 0.2); playBeep(100, 0.2, 0.15); }
+function sfxWin() { [523, 659, 784].forEach((f, i) => setTimeout(() => playBeep(f, 0.12, 0.15), i * 80)); }
+function sfxZone() { [440, 554, 660].forEach((f, i) => setTimeout(() => playBeep(f, 0.1, 0.12), i * 70)); }
+
+// ======================== MAPPA E COSTANTI ========================
+const MAPS = [
+  ['WWWWWWWWWWWWWWWWWWWW', 'Wo....W.....W....oW', 'W.WWW.W.WWW.W.WWW.W', 'W.W............W.W', 'W.W.WW...WWW.WW.W', 'W..............WW', 'W.W...W...W..W.WW', 'W..............WW', 'W.W.WW...WWW.WW.W', 'W.W............W.W', 'Wo....W.....W....oW', 'WWWWWWWWWWWWWWWWWWWW'],
+  ['WWWWWWWWWWWWWWWWWWWW', 'Wo.............oWW', 'W.WW.W.WW.WW.WW.WW', 'W...W...W....W..W', 'W.WWWW.WW.WWW.WWWW', 'W.W...........WWW', 'WW W...      ..WWW', 'W.W...........WWW', 'W.WWWW.WW.WWW.WWWW', 'W...W...W....W..W', 'Wo.............oWW', 'WWWWWWWWWWWWWWWWWWWW'],
+  ['WWWWWWWWWWWWWWWWWWWW', 'Wo...W.......W..oW', 'W.W..W.WWWWW.W.W..', 'W.W..........W.W..', 'W.WWW.W.WWWWWWW..W', 'W......W......W.W', 'WW.....      ..WWW', 'W......W......W.W', 'W.WWW.W.WWWWWWW..W', 'W.W..........W.W..', 'Wo...W.......W..oW', 'WWWWWWWWWWWWWWWWWWWW'],
+  ['WWWWWWWWWWWWWWWWWWWW', 'Wo.............oWW', 'W.WWWWWWWWWWWWWWWW', 'W..............WW', 'W.WWWWW.WW.WWWWWWW', 'W.W...........WWW', 'WW W...      ..WWW', 'W.W...........WWW', 'W.WWWWW.WW.WWWWWWW', 'W..............WW', 'Wo.............oWW', 'WWWWWWWWWWWWWWWWWWWW']
+];
+
+const ZONES = [
+  { name: 'MORANZANI', col: '#00e5ff', mn: 2, ps: 2.2, ms: 0.95 },
+  { name: 'SAN LEONARDO', col: '#00ff88', mn: 3, ps: 2.6, ms: 1.15 },
+  { name: 'CANALE PETROLI', col: '#ff6b35', mn: 4, ps: 2.9, ms: 1.35 },
+  { name: 'CANALE MELISON', col: '#f4d03f', mn: 4, ps: 3.2, ms: 1.55 }
+];
+
+const COLS = 20, ROWS = 12;
+const DR = [0, 1, 0, -1];
+const DC = [1, 0, -1, 0];
+
+// ======================== VARIABILI GLOBALI ========================
+let canvas, ctx;
+let gameState = 'menu';
+let frame = 0;
+let score = 0, highScore = 0, lives = 3, zoneIdx = 0;
+let walls = [], pellets = [], powers = [], fishSpots = [];
+let totalCrabs = 0, eatenCrabs = 0;
+let player = { r: 1, c: 1, x: 0, y: 0, dir: 0, moving: false, prog: 0, dr: 0, dc: 0, invincible: 0 };
+let medusas = [];
+let fish = { active: false, x: 0, y: 0, timer: 0, dir: 1 };
+let fearTimer = 0;
+let wantDir = 0;
+let particles = [];
+let canvasW, canvasH, tileW, tileH, yOffset;
+
+// ======================== FUNZIONI UTILITY ========================
+function resizeAndDraw() {
+  const container = document.getElementById('game-container');
+  canvasW = container.clientWidth;
+  canvasH = container.clientHeight;
+  canvas.width = canvasW;
+  canvas.height = canvasH;
+  tileW = canvasW / COLS;
+  tileH = (canvasH - 40) / ROWS;
+  yOffset = 20;
+  if (gameState === 'playing') draw();
+}
+
+function getCX(c) { return c * tileW + tileW / 2; }
+function getCY(r) { return yOffset + r * tileH + tileH / 2; }
+function isWall(r, c) { return r < 0 || r >= ROWS || c < 0 || c >= COLS || (walls[r] && walls[r][c]); }
+
+// ======================== MAPPA ========================
+function parseMap() {
+  walls = [];
+  pellets = [];
+  powers = [];
+  fishSpots = [];
+  totalCrabs = 0;
+  eatenCrabs = 0;
+  
+  for (let r = 0; r < ROWS; r++) {
+    walls[r] = [];
+    let row = MAPS[zoneIdx][r] || '';
+    while (row.length < COLS) row += ' ';
+    for (let c = 0; c < COLS; c++) {
+      let ch = row[c];
+      walls[r][c] = (ch === 'W');
+      if (ch === '.') { pellets.push({ r, c, eaten: false }); totalCrabs++; }
+      if (ch === 'o') { powers.push({ r, c, eaten: false }); }
+      if (ch === ' ' && r >= 4 && r <= 8) fishSpots.push({ r, c });
+    }
+  }
+  
+  if (fishSpots.length === 0) {
+    for (let r = 2; r < ROWS - 2; r++)
+      for (let c = 2; c < COLS - 2; c++)
+        if (!walls[r][c]) fishSpots.push({ r, c });
+  }
+}
+
+function initPlayer() {
+  for (let r = 1; r < ROWS - 1; r++)
+    for (let c = 1; c < COLS - 1; c++)
+      if (!walls[r][c]) { player.r = r; player.c = c; break; }
+  player.x = getCX(player.c);
+  player.y = getCY(player.r);
+  player.dir = 0;
+  player.moving = false;
+  player.prog = 0;
+  player.invincible = 0;
+  wantDir = 0;
+}
+
+function initMedusas() {
+  medusas = [];
+  let n = ZONES[zoneIdx].mn;
+  let spd = ZONES[zoneIdx].ms / 60;
+  let starts = [[5, 10], [5, 9], [6, 11], [6, 9], [4, 10], [7, 10]];
+  for (let i = 0; i < n; i++) {
+    let s = starts[i] || [6, 10];
+    let r = s[0], c = s[1];
+    if (isWall(r, c)) {
+      for (let rr = 1; rr < ROWS - 1; rr++)
+        for (let cc = 1; cc < COLS - 1; cc++)
+          if (!walls[rr][cc]) { r = rr; c = cc; break; }
+    }
+    medusas.push({
+      r, c, x: getCX(c), y: getCY(r), dir: 0, moving: false, prog: 0, dr: 0, dc: 0,
+      spd, frightened: false, eaten: false, col: `hsl(${280 + i * 30}, 70%, 65%)`
+    });
+  }
+}
+
+function spawnFish() {
+  if (fishSpots.length === 0) return;
+  let spot = fishSpots[Math.floor(Math.random() * fishSpots.length)];
+  fish.active = true;
+  fish.x = getCX(spot.c);
+  fish.y = getCY(spot.r);
+  fish.timer = 400 + Math.random() * 150;
+  fish.dir = Math.random() > 0.5 ? 1 : -1;
+}
+
+// ======================== MOVIMENTO ========================
+function moveEntity(e, targetDir) {
+  if (!e.moving) {
+    let dirs = [targetDir, e.dir];
+    for (let d of dirs) {
+      let nr = e.r + DR[d], nc = e.c + DC[d];
+      if (!isWall(nr, nc)) {
+        e.dir = d;
+        e.dr = DR[d];
+        e.dc = DC[d];
+        e.moving = true;
+        e.prog = 0;
+        break;
+      }
+    }
+  }
+  
+  if (e.moving) {
+    let spd = e.spd || ZONES[zoneIdx].ps / 60;
+    e.prog += spd;
+    if (e.prog >= 1) {
+      e.r += e.dr;
+      e.c += e.dc;
+      e.x = getCX(e.c);
+      e.y = getCY(e.r);
+      e.moving = false;
+      e.prog = 0;
+      if (!isWall(e.r + DR[targetDir], e.c + DC[targetDir])) {
+        e.dir = targetDir;
+        e.dr = DR[targetDir];
+        e.dc = DC[targetDir];
+        e.moving = true;
+      } else if (!isWall(e.r + DR[e.dir], e.c + DC[e.dir])) {
+        e.dr = DR[e.dir];
+        e.dc = DC[e.dir];
+        e.moving = true;
+      }
+    } else {
+      e.x = getCX(e.c) + e.dc * e.prog * tileW;
+      e.y = getCY(e.r) + e.dr * e.prog * tileH;
+    }
+  }
+}
+
+function medusaAI(m) {
+  if (m.moving) return m.dir;
+  let pr = player.r, pc = player.c;
+  
+  if (m.frightened) {
+    let best = -1, bestDist = -1;
+    for (let d = 0; d < 4; d++) {
+      if (isWall(m.r + DR[d], m.c + DC[d])) continue;
+      let dist = (m.r + DR[d] - pr) ** 2 + (m.c + DC[d] - pc) ** 2;
+      if (dist > bestDist) { bestDist = dist; best = d; }
+    }
+    return best >= 0 ? best : m.dir;
+  }
+  
+  let best = -1, bestDist = 9999;
+  for (let d = 0; d < 4; d++) {
+    if (isWall(m.r + DR[d], m.c + DC[d])) continue;
+    let dist = (m.r + DR[d] - pr) ** 2 + (m.c + DC[d] - pc) ** 2;
+    if (dist < bestDist) { bestDist = dist; best = d; }
+  }
+  return best >= 0 ? best : m.dir;
+}
+
+// ======================== UPDATE UI ========================
+function updateUI() {
+  document.getElementById('scoreDisplay').innerText = score;
+  let hearts = '';
+  for (let i = 0; i < lives; i++) hearts += '❤️';
+  for (let i = lives; i < 3; i++) hearts += '🖤';
+  document.getElementById('livesDisplay').innerHTML = hearts;
+  document.getElementById('crabsDisplay').innerHTML = `${eatenCrabs}/${totalCrabs}`;
+  document.getElementById('fish-alert').innerHTML = fish.active ? '🐟 ACCHIAPPA!' : `🦀 ${eatenCrabs}/${totalCrabs}`;
+  if (score > highScore) { highScore = score; document.getElementById('recordDisplay').innerText = highScore; }
+  
+  // Fear bar
+  let percent = (fearTimer / 360) * 100;
+  document.getElementById('fearFill').style.width = percent + '%';
+}
+
+// ======================== GAME LOGIC ========================
+function updateGame() {
+  if (gameState !== 'playing') return;
+  frame++;
+  
+  moveEntity(player, wantDir);
+  
+  for (let m of medusas) {
+    if (m.eaten) continue;
+    let oldSpd = m.spd;
+    if (m.frightened) m.spd = oldSpd * 0.45;
+    moveEntity(m, medusaAI(m));
+    m.spd = oldSpd;
+  }
+  
+  // Eat pellets
+  for (let p of pellets) {
+    if (p.eaten) continue;
+    if (p.r === player.r && p.c === player.c) {
+      p.eaten = true;
+      eatenCrabs++;
+      score += 10;
+      sfxEat();
+      particles.push({ x: getCX(p.c), y: getCY(p.r), life: 0.8, txt: '+10', col: '#4488ff' });
+      updateUI();
+      if (eatenCrabs >= totalCrabs && !fish.active) {
+        spawnFish();
+        particles.push({ x: canvasW / 2, y: yOffset + 50, life: 1.2, txt: '🐟 ACCHIAPPA!', col: '#f4d03f' });
+      }
+    }
+  }
+  
+  // Eat powers
+  for (let p of powers) {
+    if (p.eaten) continue;
+    if (p.r === player.r && p.c === player.c) {
+      p.eaten = true;
+      score += 50;
+      sfxPower();
+      fearTimer = 360;
+      for (let m of medusas) { m.frightened = true; m.eaten = false; }
+      particles.push({ x: getCX(p.c), y: getCY(p.r), life: 0.8, txt: '⚡ POWER!', col: '#ffcc00' });
+      updateUI();
+    }
+  }
+  
+  if (fearTimer > 0) {
+    fearTimer--;
+    updateUI();
+    if (fearTimer === 0) for (let m of medusas) m.frightened = false;
+  }
+  
+  // Fish catch
+  if (fish.active) {
+    fish.timer--;
+    let dx = player.x - fish.x, dy = player.y - fish.y;
+    if (Math.hypot(dx, dy) < Math.min(tileW, tileH) * 0.7) {
+      fish.active = false;
+      score += 500;
+      sfxWin();
+      particles.push({ x: player.x, y: player.y - 20, life: 1, txt: '+500 PRESO!', col: '#00ff88' });
+      updateUI();
+      
+      if (zoneIdx < 3) {
+        gameState = 'zoneTransition';
+        document.getElementById('zoneTitle').innerHTML = `🌊 ${ZONES[zoneIdx + 1].name} 🌊`;
+        document.getElementById('zoneDesc').innerHTML = `Nuova zona sbloccata!<br>Bonus +300 punti!<br><span style="color:#00e5ff">Meduse: ${ZONES[zoneIdx + 1].mn}</span>`;
+        document.getElementById('zoneOverlay').classList.remove('hidden');
+        sfxZone();
+      } else {
+        if (score > highScore) highScore = score;
+        document.getElementById('finalScore').innerHTML = `PUNTI: ${score}<br>RECORD: ${highScore}`;
+        document.getElementById('gameoverOverlay').classList.remove('hidden');
+        gameState = 'gameover';
+      }
+      return;
+    }
+    if (fish.timer <= 0) {
+      fish.active = false;
+      setTimeout(() => { if (gameState === 'playing') spawnFish(); }, 2000);
+    }
+  }
+  
+  // Medusa collision
+  if (player.invincible === 0) {
+    for (let m of medusas) {
+      if (m.eaten) continue;
+      if (Math.hypot(player.x - m.x, player.y - m.y) < Math.min(tileW, tileH) * 0.55) {
+        if (m.frightened) {
+          m.eaten = true;
+          score += 200;
+          sfxEat();
+          particles.push({ x: m.x, y: m.y - 10, life: 0.6, txt: '+200!', col: '#00ccff' });
+          updateUI();
+        } else {
+          lives--;
+          sfxHit();
+          player.invincible = 80;
+          for (let i = 0; i < 8; i++) particles.push({ x: player.x, y: player.y, life: 0.4, txt: '💢', col: '#ff6600' });
+          updateUI();
+          if (lives <= 0) {
+            if (score > highScore) highScore = score;
+            document.getElementById('finalScore').innerHTML = `PUNTI: ${score}<br>RECORD: ${highScore}`;
+            document.getElementById('gameoverOverlay').classList.remove('hidden');
+            gameState = 'gameover';
+          }
+          break;
+        }
+      }
+    }
+  }
+  if (player.invincible > 0) player.invincible--;
+  
+  for (let i = particles.length - 1; i >= 0; i--) {
+    particles[i].life -= 0.02;
+    if (particles[i].life <= 0) particles.splice(i, 1);
+  }
+}
+
+// ======================== DRAW ========================
+function draw() {
+  if (!ctx) return;
+  ctx.clearRect(0, 0, canvasW, canvasH);
+  
+  let grad = ctx.createLinearGradient(0, 0, 0, canvasH);
+  grad.addColorStop(0, '#001a2a');
+  grad.addColorStop(1, '#002c1a');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, canvasW, canvasH);
+  
+  // Walls
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      if (walls[r][c]) {
+        let x = c * tileW, y = yOffset + r * tileH;
+        ctx.fillStyle = '#0a2a1a';
+        ctx.fillRect(x, y, tileW, tileH);
+        ctx.strokeStyle = '#1a6a3a';
+        ctx.strokeRect(x + 1, y + 1, tileW - 2, tileH - 2);
+      }
+    }
+  }
+  
+  // Blue crabs
+  for (let p of pellets) {
+    if (p.eaten) continue;
+    let x = getCX(p.c), y = getCY(p.r) + Math.sin(frame * 0.1 + p.c) * 2;
+    ctx.fillStyle = '#1144cc';
+    ctx.beginPath();
+    ctx.ellipse(x, y, tileW * 0.18, tileH * 0.18, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  
+  // Golden crabs
+  for (let p of powers) {
+    if (p.eaten) continue;
+    let x = getCX(p.c), y = getCY(p.r) + Math.sin(frame * 0.12) * 3;
+    ctx.fillStyle = '#ffaa00';
+    ctx.beginPath();
+    ctx.ellipse(x, y, tileW * 0.22, tileH * 0.22, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  
+  // Medusas
+  for (let m of medusas) {
+    if (m.eaten) continue;
+    let col = m.frightened ? '#00ccff' : m.col;
+    ctx.fillStyle = col;
+    ctx.beginPath();
+    ctx.ellipse(m.x, m.y - 5, tileW * 0.18, tileH * 0.14, 0, 0, Math.PI * 2);
+    ctx.fill();
+    for (let i = -2; i <= 2; i++) {
+      ctx.beginPath();
+      ctx.moveTo(m.x + i * 6, m.y);
+      ctx.quadraticCurveTo(m.x + i * 5, m.y + 10, m.x + i * 6, m.y + 18);
+      ctx.strokeStyle = col;
+      ctx.stroke();
+    }
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(m.x - 7, m.y - 10, 3, 3);
+    ctx.fillRect(m.x + 4, m.y - 10, 3, 3);
+  }
+  
+  // Boat
+  if (player.invincible === 0 || Math.floor(frame / 5) % 2 === 0) {
+    ctx.fillStyle = '#cc8833';
+    ctx.fillRect(player.x - 12, player.y - 8, 24, 16);
+    ctx.fillStyle = '#aa6622';
+    ctx.fillRect(player.x - 10, player.y - 6, 20, 12);
+    ctx.fillStyle = '#ddeeff';
+    ctx.fillRect(player.x - 6, player.y - 5, 12, 10);
+    ctx.fillStyle = '#ff4444';
+    ctx.font = 'bold 6px monospace';
+    ctx.fillText('⚓', player.x - 2, player.y + 2);
+  }
+  
+  // Fish
+  if (fish.active) {
+    ctx.fillStyle = '#88aacc';
+    ctx.beginPath();
+    ctx.ellipse(fish.x, fish.y, tileW * 0.2, tileH * 0.16, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#cceeff';
+    ctx.beginPath();
+    ctx.ellipse(fish.x - 5, fish.y - 2, 4, 3, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#111';
+    ctx.fillRect(fish.x - 7, fish.y - 4, 3, 3);
+  }
+  
+  // Particles
+  for (let p of particles) {
+    ctx.globalAlpha = p.life;
+    ctx.fillStyle = p.col;
+    ctx.font = 'bold 8px "Press Start 2P"';
+    ctx.textAlign = 'center';
+    ctx.fillText(p.txt, p.x, p.y);
+  }
+  ctx.globalAlpha = 1;
+}
+
+// ======================== GAME FLOW ========================
+function initNewZone() {
+  zoneIdx++;
+  score += 300;
+  updateUI();
+  parseMap();
+  initPlayer();
+  initMedusas();
+  fish.active = false;
+  fearTimer = 0;
+  eatenCrabs = 0;
+  
+  for (let i = 0; i < 4; i++) {
+    let el = document.querySelector(`.zs[data-z="${i}"]`);
+    if (el) el.className = `zs ${i < zoneIdx ? 'ok' : (i === zoneIdx ? 'on' : '')}`;
+  }
+  document.getElementById('zone-name').innerHTML = ZONES[zoneIdx].name;
+  document.getElementById('zone-name').style.color = ZONES[zoneIdx].col;
+  gameState = 'playing';
+}
+
+function startGame() {
+  score = 0;
+  lives = 3;
+  zoneIdx = 0;
+  fearTimer = 0;
+  parseMap();
+  initPlayer();
+  initMedusas();
+  fish.active = false;
+  eatenCrabs = 0;
+  gameState = 'playing';
+  frame = 0;
+  updateUI();
+  
+  document.getElementById('zone-name').innerHTML = ZONES[0].name;
+  document.getElementById('zone-name').style.color = ZONES[0].col;
+  for (let i = 0; i < 4; i++) {
+    let el = document.querySelector(`.zs[data-z="${i}"]`);
+    if (el) el.className = `zs ${i === 0 ? 'on' : ''}`;
+  }
+  
+  document.getElementById('startOverlay').classList.add('hidden');
+  document.getElementById('gameoverOverlay').classList.add('hidden');
+  document.getElementById('zoneOverlay').classList.add('hidden');
+}
+
+// ======================== TOUCH CONTROLLI ========================
+function setupTouchControls() {
+  document.getElementById('touchUp').addEventListener('touchstart', (e) => { e.preventDefault(); wantDir = 3; });
+  document.getElementById('touchDown').addEventListener('touchstart', (e) => { e.preventDefault(); wantDir = 1; });
+  document.getElementById('touchLeft').addEventListener('touchstart', (e) => { e.preventDefault(); wantDir = 2; });
+  document.getElementById('touchRight').addEventListener('touchstart', (e) => { e.preventDefault(); wantDir = 0; });
+  
+  let dragStart = null;
+  canvas.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    let rect = canvas.getBoundingClientRect();
+    let scaleX = canvas.width / rect.width;
+    let scaleY = canvas.height / rect.height;
+    dragStart = { x: (e.touches[0].clientX - rect.left) * scaleX, y: (e.touches[0].clientY - rect.top) * scaleY };
+  });
+  
+  canvas.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    if (!dragStart) return;
+    let rect = canvas.getBoundingClientRect();
+    let scaleX = canvas.width / rect.width;
+    let scaleY = canvas.height / rect.height;
+    let x = (e.touches[0].clientX - rect.left) * scaleX;
+    let y = (e.touches[0].clientY - rect.top) * scaleY;
+    let dx = x - dragStart.x, dy = y - dragStart.y;
+    if (Math.abs(dx) > 20 || Math.abs(dy) > 20) {
+      if (Math.abs(dx) > Math.abs(dy)) wantDir = dx > 0 ? 0 : 2;
+      else wantDir = dy > 0 ? 1 : 3;
+      dragStart = null;
+    }
+  });
+  canvas.addEventListener('touchend', () => { dragStart = null; });
+  
+  // Keyboard support
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === 'd') wantDir = 0;
+    if (e.key === 'ArrowDown' || e.key === 's') wantDir = 1;
+    if (e.key === 'ArrowLeft' || e.key === 'a') wantDir = 2;
+    if (e.key === 'ArrowUp' || e.key === 'w') wantDir = 3;
+    if (gameState === 'zoneTransition' && e.key === ' ') initNewZone();
+    e.preventDefault();
+  });
+}
+
+// ======================== GAME LOOP ========================
+function gameLoop() {
+  updateGame();
+  draw();
+  requestAnimationFrame(gameLoop);
+}
+
+// ======================== INIT ========================
+window.onload = () => {
+  canvas = document.getElementById('gameCanvas');
+  ctx = canvas.getContext('2d');
+  resizeAndDraw();
+  window.addEventListener('resize', () => { resizeAndDraw(); draw(); });
+  setupTouchControls();
+  
+  document.getElementById('startBtn').onclick = () => startGame();
+  document.getElementById('restartBtn').onclick = () => startGame();
+  document.getElementById('zoneOverlay').addEventListener('click', () => {
+    if (gameState === 'zoneTransition') initNewZone();
+    document.getElementById('zoneOverlay').classList.add('hidden');
+  });
+  
+  gameLoop();
+};
+</script>
+</body>
+</html>
